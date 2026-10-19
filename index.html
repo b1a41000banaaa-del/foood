@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>출동! 마트 탐험대 : 스피드 컨베이어 신선 감별소</title>
+  <meta name="description" content="식품의 올바른 장보기 5단계 순서와 컨베이어 벨트 돋보기 신선 감별 타임어택 액션 게임">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- 상단 HUD -->
+    <header class="app-header">
+      <div class="header-left">
+        <span class="logo-icon">🛒</span>
+        <div class="logo-text">
+          <h1>신선 특공대: 스피드 벨트</h1>
+          <span class="sub-title">Speed Conveyor Inspector</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <!-- 실시간 누적 점수 -->
+        <div class="score-board-box">
+          <span class="score-label">SCORE</span>
+          <span id="hud-score-text" class="score-digit">0</span>
+        </div>
+
+        <!-- 카트 신선도 HP 게이지 -->
+        <div class="hp-gauge-box">
+          <div class="hp-label">
+            <span>💚 카트 신선도</span>
+            <strong id="hp-text">100%</strong>
+          </div>
+          <div class="hp-bar-track">
+            <div id="hp-bar" class="hp-bar-fill hp-healthy" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- 콤보 배지 -->
+        <div id="combo-badge" class="combo-pill hidden">
+          <span id="combo-count">2</span> COMBO! 🔥
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- 담긴 정상 상품 수 -->
+        <div class="cart-status-badge">
+          <span>🛒 카트</span>
+          <span id="cart-count" class="cart-num">0</span>
+        </div>
+        <button id="btn-toggle-sound" class="btn-sound-toggle" title="효과음 켜기/끄기">
+          🔊 소리
+        </button>
+      </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="main-content">
+      <!-- 0. 인트로 뷰 -->
+      <section id="view-intro" class="view-panel intro-panel">
+        <div class="intro-hero-card">
+          <div class="hero-tag">중학교 기술·가정 식생활 단원</div>
+          <h2 class="hero-title">
+            "빨리 판단할수록 점수가 폭발한다!"<br>
+            <span class="accent-color">스피드 컨베이어 신선 감별소</span>
+          </h2>
+          <p class="hero-desc">
+            장보기 5대 순서 코너에서 <strong>무작위 순서</strong>로 상품들이 벨트를 타고 올라옵니다.<br>
+            돋보기로 <strong>싹, 멍, 눈알, 아가미, 찌그러짐</strong>을 순식간에 포착하여<br>
+            <strong>[👈 상함/결함! ➔ 폐기함]</strong> 또는 <strong>[👉 신선함! ➔ 카트]</strong>로 잽싸게 던지세요!<br>
+            <strong style="color: #059669;">⚡ 빨리 던질수록 대량의 스피드 보너스 점수 획득!</strong>
+          </p>
+
+          <div class="game-rules-card">
+            <div class="rule-col">
+              <span class="rule-icon">🎲</span>
+              <h4>구역별 랜덤 출현</h4>
+              <p>신선과 상함의 고정된 패턴 없이 매번 무작위로 섞여 나와 긴장감 백배!</p>
+            </div>
+            <div class="rule-col rule-speed-focus">
+              <span class="rule-icon">⚡</span>
+              <h4>초광속 스피드 보너스</h4>
+              <p>0.8초 이내 광속 분류 시 +60점 보너스 & 콤보 배수 적용으로 고득점!</p>
+            </div>
+            <div class="rule-col">
+              <span class="rule-icon">🚦</span>
+              <h4>장보기 5대 순서 탐험</h4>
+              <p>실온·곡류 ➔ 채소·과일 ➔ 냉장가공 ➔ 육류·어패 ➔ 냉동식품 순서로 코너 이동!</p>
+            </div>
+          </div>
+
+          <div class="intro-action-box">
+            <button id="btn-start-game" class="btn-action-start">
+              🚀 스피드 벨트 가동 &amp; 장보기 출발!
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 1. 컨베이어 벨트 메인 감별 뷰 (장보기 순서 5대 구역 탐험) -->
+      <section id="view-belt" class="view-panel hidden">
+        <!-- 현재 장보기 구역 배너 (순서 교육) -->
+        <div class="zone-banner">
+          <div class="zone-meta">
+            <span id="zone-step-badge" class="zone-badge">1단계 구역</span>
+            <span id="zone-progress-badge" class="zone-progress-pill">구역 진행 1 / 6</span>
+          </div>
+          <h2 id="zone-name" class="zone-title">🌾 1구역: 실온 보관 식품 &amp; 곡류 코너</h2>
+          <p id="zone-order-rule" class="zone-rule">장보기 순서 1단계: 온도 변화에 가장 덜 민감하여 제일 먼저 카트에 담는 구역!</p>
+        </div>
+
+        <!-- 컨베이어 벨트 무대 영역 -->
+        <div class="conveyor-stage-container">
+          <!-- 좌측: 폐기함 드롭존 -->
+          <div id="dropzone-trash" class="dropzone-box dropzone-trash">
+            <div class="drop-icon">🗑️</div>
+            <div class="drop-title">상함 / 결함!</div>
+            <span class="drop-sub">왼쪽으로 드래그 (◀ 키)</span>
+          </div>
+
+          <!-- 중앙: 컨베이어 벨트 & 상품 카드 -->
+          <div class="belt-center-track">
+            <div class="conveyor-roller top-roller"></div>
+            <div class="conveyor-belt-surface">
+              <!-- 현재 검사 대상 상품 카드 (드래그 가능) -->
+              <div id="inspect-product-card" class="inspect-draggable-card">
+                <div class="card-glass-header">
+                  <span id="card-item-name" class="item-name-tag">국내산 햅쌀</span>
+                  <div id="card-speed-meter" class="speed-live-meter">⏱️ 0.0s</div>
+                </div>
+                <div id="card-visual-box" class="card-visual-magnifier">
+                  <!-- 동적 SVG 렌더링 -->
+                </div>
+                <!-- 🔍 돋보기 관찰 한마디 메모 박스 -->
+                <div class="card-observation-box">
+                  <div class="obs-header">
+                    <span class="obs-badge">🔍 관찰 메모</span>
+                    <span class="obs-sub">특징을 읽고 판단하세요!</span>
+                  </div>
+                  <p id="card-item-clue" class="obs-clue-text">낱알이 고르고 맑은 반투명 빛, 금이나 부서진 가루가 없음</p>
+                </div>
+                <div class="card-guide-footer">
+                  <span class="guide-text">⚡ 특징 확인 후 ◀ 상함(폐기) / 신선(카트) ▶ 잽싸게 이동!</span>
+                </div>
+              </div>
+            </div>
+            <div class="conveyor-roller bottom-roller"></div>
+
+            <!-- 스피드 보너스 & 콤보 버스트 오버레이 -->
+            <div id="combo-burst-overlay" class="combo-burst-text hidden">
+              ⚡ 0.7s LIGHTNING! +150
+            </div>
+          </div>
+
+          <!-- 우측: 카트 드롭존 -->
+          <div id="dropzone-cart" class="dropzone-box dropzone-cart">
+            <div class="drop-icon">🛒</div>
+            <div class="drop-title">신선함 / 합격!</div>
+            <span class="drop-sub">오른쪽으로 드래그 (▶ 키)</span>
+          </div>
+        </div>
+
+        <!-- 하단 조작 컨트롤 버튼 (클릭/터치 편의) -->
+        <div class="quick-control-bar">
+          <button id="btn-swipe-left" class="btn-swipe btn-swipe-trash">
+            🗑️ ◀ 상함! 폐기함으로 (결함)
+          </button>
+          <div class="shortcut-tip">키보드 ◀ ▶ 키로도 번개 조작 가능!</div>
+          <button id="btn-swipe-right" class="btn-swipe btn-swipe-cart">
+            🛒 신선함! 카트에 쏙 (합격) ▶
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. 8대 품질 인증 마크 매칭 뷰 -->
+      <section id="view-cert" class="view-panel hidden">
+        <div class="stage-banner cert-banner">
+          <div class="stage-info">
+            <span class="stage-step-tag">마지막 보너스 챌린지</span>
+            <h2>건강과 환경을 지키는 8대 품질 인증 마크 스피드 매칭</h2>
+            <p>정부 공인 <strong>품질 인증 마크</strong>와 그에 맞는 <strong>부여 기준</strong>을 하나씩 클릭하여 짝을 지어주세요!</p>
+          </div>
+          <div class="cert-status-box">
+            <span id="cert-match-count" class="match-count-badge">연결 0 / 8</span>
+          </div>
+        </div>
+
+        <div class="cert-matching-grid-board">
+          <!-- 좌측 컬럼: 마크 카드 8개 -->
+          <div class="matching-col">
+            <h3 class="col-head">🏷️ 정부 공인 마크 (클릭)</h3>
+            <div id="cert-marks-col" class="cert-items-list">
+              <!-- JS 동적 생성 -->
+            </div>
+          </div>
+
+          <div class="matching-mid-arrow">⇄</div>
+
+          <!-- 우측 컬럼: 설명 카드 8개 -->
+          <div class="matching-col">
+            <h3 class="col-head">📖 부여 기준 및 설명 (클릭)</h3>
+            <div id="cert-descs-col" class="cert-items-list">
+              <!-- JS 동적 생성 -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 최종 결과 영수증 뷰 -->
+      <section id="view-result" class="view-panel hidden">
+        <div class="result-container">
+          <div class="receipt-card">
+            <div class="receipt-header">
+              <div class="receipt-logo">🛒 신선 마트 (FRESH MART)</div>
+              <p class="receipt-sub">신선 감별사 최종 검수 성적표</p>
+              <div class="receipt-line">================================</div>
+              <div class="receipt-meta">
+                <span>일시: <strong id="receipt-date">2026.10.19</strong></span>
+                <span>감별사: <strong>중학교 학생</strong></span>
+              </div>
+              <div class="receipt-line">================================</div>
+            </div>
+
+            <!-- 최종 성적 -->
+            <div class="receipt-score-section">
+              <span class="score-label">최종 획득 스코어</span>
+              <div id="receipt-final-score" class="score-value">0점</div>
+              <div class="receipt-stats-grid">
+                <span id="receipt-avg-speed" class="stat-pill">⚡ 평균 반응: 1.1초</span>
+                <span id="receipt-max-combo" class="stat-pill">🔥 최대 콤보: 8 COMBO</span>
+              </div>
+              <div id="receipt-rank-title" class="rank-title">👑 최고 등급: 광속 신선 마스터 셰프</div>
+              <p id="receipt-comment" class="rank-desc">엄청난 스피드로 결함 식품을 걸러내고 신선한 식재료만 카트에 담았습니다!</p>
+            </div>
+
+            <div class="receipt-line">--------------------------------</div>
+            <div class="receipt-interactive-notice">
+              👉 아래 식품을 클릭하면 <strong>[교과서 신선 식품 감별 기준]</strong>이 팝업됩니다!
+            </div>
+            <h4 class="receipt-cart-title">📦 안전 통과 장바구니 품목 (<span id="receipt-item-count">0</span>개)</h4>
+            <ul id="receipt-cart-items" class="receipt-items-list">
+              <!-- JS 동적 생성: 클릭 시 교과서 감별 기준 팝업 -->
+            </ul>
+
+            <div class="receipt-line">================================</div>
+            <div class="receipt-barcode">
+              <div class="barcode-bars"></div>
+              <span class="barcode-num">No. SPEED-CONVEYOR-1019</span>
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <button id="btn-restart-game" class="btn-action-start">
+              🔄 처음부터 다시 도전하기
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 📖 영수증 식품 클릭 시 교과서 감별 기준 상세 모달 -->
+    <div id="modal-textbook-detail" class="modal-backdrop hidden">
+      <div class="modal-textbook-card">
+        <div class="textbook-modal-head">
+          <span class="textbook-badge">📖 교과서 핵심 감별법</span>
+          <h3 id="tb-item-name">식품명</h3>
+        </div>
+        <div class="textbook-modal-visual" id="tb-visual-box">
+          <!-- SVG -->
+        </div>
+        <div class="textbook-modal-content">
+          <div class="tb-rule-box">
+            <h4>✅ 교과서 기준 신선한 식품 고르는 법:</h4>
+            <p id="tb-rule-text">낱알이 고르고 반투명하며 적당히 건조된 것</p>
+          </div>
+          <div class="tb-explanation-box">
+            <h4>💡 영양 및 위생 포인트:</h4>
+            <p id="tb-explanation-text">설명</p>
+          </div>
+        </div>
+        <div class="textbook-modal-footer">
+          <button id="btn-close-textbook-modal" class="btn-modal-ok">
+            확인 및 닫기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 구역 전환 알림 팝업 모달 -->
+    <div id="modal-zone-alert" class="modal-backdrop hidden">
+      <div class="modal-zone-card">
+        <div class="modal-zone-icon" id="zone-modal-icon">🍎</div>
+        <h3 id="zone-modal-title">2구역으로 이동합니다!</h3>
+        <p id="zone-modal-rule" class="zone-modal-rule">채소·과일류는 신선 자연식품 구역입니다.</p>
+        <button id="btn-zone-continue" class="btn-zone-ok">
+          계속 탐험하기 ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- 오답 / 경보 피드백 모달 -->
+    <div id="modal-feedback" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-head">
+          <span id="feedback-badge" class="modal-badge modal-badge-warn">신선도 감점</span>
+          <h3 id="feedback-title">경보!</h3>
+        </div>
+        <div id="feedback-body" class="modal-body">
+          <!-- 동적 텍스트 -->
+        </div>
+        <div class="modal-footer">
+          <button id="btn-feedback-continue" class="btn-modal-ok">
+            확인 ➔
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game-data.js"></script>
+  <script src="visual-assets.js"></script>
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
